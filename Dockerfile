@@ -3,4 +3,4 @@ RUN apk --update add bash nano
 ENV STATIC_URL app/static
 ENV STATIC_PATH /app/static
 COPY ./requirements.txt /requirements.txt
-RUN pip install -r /var/www/requirements.txt
+RUN pip install -r /requirements.txt
