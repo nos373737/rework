@@ -6,6 +6,6 @@ RUN pip install -r requirements.txt
 RUN fabmanager create-admin --username admin --firstname admin --lastname flask --email admin@flask.org --password password
 RUN python testdata.py
 
-EXPOSE 8888
+EXPOSE 5000
 
 CMD ["python", "run.py"]
