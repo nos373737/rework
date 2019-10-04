@@ -22,11 +22,9 @@ BABEL_DEFAULT_LOCALE = "en"
 BABEL_DEFAULT_FOLDER = "translations"
 LANGUAGES = {
     "en": {"flag": "gb", "name": "English"},
-    "pt": {"flag": "pt", "name": "Portuguese"},
-    "es": {"flag": "es", "name": "Spanish"},
     "de": {"flag": "de", "name": "German"},
-    "zh": {"flag": "cn", "name": "Chinese"},
     "ru": {"flag": "ru", "name": "Russian"},
+    "uk": {"flag": "ua", "name": "Ukrainian"},
 }
 
 
@@ -45,12 +43,12 @@ APP_NAME = "Rework"
 APP_THEME = ""  # default
 # APP_THEME = "cerulean.css"      # COOL
 # APP_THEME = "amelia.css"
-# APP_THEME = "cosmo.css"
+# APP_THEME = "cosmo.css"        #not bad
 # APP_THEME = "cyborg.css"       # COOL
-# APP_THEME = "flatly.css"
+# APP_THEME = "flatly.css"       #not bad
 # APP_THEME = "journal.css"
 # APP_THEME = "readable.css"
-# APP_THEME = "simplex.css"
+# APP_THEME = "simplex.css"       #prettl theme
 # APP_THEME = "slate.css"          # COOL
-# APP_THEME = "spacelab.css"      # NICE
+# APP_THEME = "spacelab.css"      # not bad
 # APP_THEME = "united.css"

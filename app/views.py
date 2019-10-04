@@ -5,6 +5,7 @@ from flask_appbuilder.charts.views import GroupByChartView
 from flask_appbuilder.models.group import aggregate_count
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 
+
 from . import appbuilder, db
 from .models import Contact, ContactGroup, Gender, PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, ReworkErrorInItem
 
@@ -253,7 +254,7 @@ class ReworkModelView(ModelView):
     ]
 
     add_fieldsets = [
-        ("Add new Error", {"fields": ["psa", "part_number", "red_ticket_number", "red_ticket_date", "defect_place"]}),
+        ("Add New Error", {"fields": ["psa", "part_number", "red_ticket_number", "red_ticket_date", "defect_place"]}),
     ]
 
     edit_fieldsets = [
