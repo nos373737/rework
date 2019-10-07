@@ -1,11 +1,18 @@
 import datetime
 
 from flask_appbuilder import Model
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, DateTime
+import enum
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, DateTime, Enum
 from sqlalchemy.orm import relationship
 
 mindate = datetime.date(datetime.MINYEAR, 1, 1)
 
+#Enumeration in Rework
+class StatusEnum(enum.Enum):
+    red = "Red"
+    yellow = "Yellow"
+    done = "Done"
+    broken = "Broken"
 
 class ContactGroup(Model):
     id = Column(Integer, primary_key=True)
@@ -60,6 +67,13 @@ class PartNumber(Model):
     def __repr__(self):
         return self.description
 
+class BrigadeNum(Model):
+    id = Column(Integer, primary_key = True)
+    description = Column(String(30), nullable = False)
+
+    def __repr__(self):
+        return self.description
+
 class DefectPosition(Model):
     id = Column(Integer, primary_key = True)
     description = Column(String(30), nullable = False)
@@ -68,6 +82,14 @@ class DefectPosition(Model):
         return self.description
 
 class DefectPlace(Model):
+    id = Column(Integer, primary_key = True)
+    description = Column(String(30), nullable = False)
+
+    def __repr__(self):
+        return self.description
+
+
+class Operator(Model):
     id = Column(Integer, primary_key = True)
     description = Column(String(30), nullable = False)
 
@@ -102,10 +124,28 @@ class Rework(Model):
     rework_created = Column(DateTime, default = datetime.datetime.utcnow, nullable = False)
     red_ticket_number = Column(String(30), nullable = False)
     red_ticket_date = Column(Date)
+    brigade_num_id = Column(Integer, ForeignKey("brigade_num.id"), nullable = False)
+    brigade_num = relationship("BrigadeNum") 
     defect_place_id = Column(Integer, ForeignKey("defect_place.id"), nullable = False)
     defect_place = relationship("DefectPlace")
+    status = Column(Enum(StatusEnum), nullable = False, default = StatusEnum.red)
+    yellow_ticket_number = Column(String(30))
+    rework_period = Column(Date)
+    kw = Column(String(30))
+    operator_id = Column(Integer, ForeignKey("operator.id"))
+    responsible = relationship("Operator") 
 
 class ReworkErrorInItem(Model):
+    id = Column(Integer, primary_key = True)
+    rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
+    rework = relationship("Rework")
+    error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
+    error = relationship("Error")
+    defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
+    defect_position = relationship("DefectPosition")
+    defect_cell = Column(String(30))
+
+class ReworkErrorOutItem(Model):
     id = Column(Integer, primary_key = True)
     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
     rework = relationship("Rework")
