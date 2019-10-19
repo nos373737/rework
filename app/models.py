@@ -1,8 +1,9 @@
 import datetime
 
+from flask import Markup, url_for
 from flask_appbuilder import Model
 import enum
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, DateTime, Enum, Sequence
 from sqlalchemy.orm import relationship
 
 mindate = datetime.date(datetime.MINYEAR, 1, 1)
@@ -14,44 +15,10 @@ class StatusEnum(enum.Enum):
     done = "Done"
     broken = "Broken"
 
-class ContactGroup(Model):
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True, nullable=False)
-
-    def __repr__(self):
-        return self.name
-
-
-class Gender(Model):
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True, nullable=False)
-
-    def __repr__(self):
-        return self.name
-
-
-class Contact(Model):
-    id = Column(Integer, primary_key=True)
-    name = Column(String(150), unique=True, nullable=False)
-    address = Column(String(564))
-    birthday = Column(Date, nullable=True)
-    personal_phone = Column(String(20))
-    personal_celphone = Column(String(20))
-    contact_group_id = Column(Integer, ForeignKey("contact_group.id"), nullable=False)
-    contact_group = relationship("ContactGroup")
-    gender_id = Column(Integer, ForeignKey("gender.id"), nullable=False)
-    gender = relationship("Gender")
-
-    def __repr__(self):
-        return self.name
-
-    def month_year(self):
-        date = self.birthday or mindate
-        return datetime.datetime(date.year, date.month, 1) or mindate
-
-    def year(self):
-        date = self.birthday or mindate
-        return datetime.datetime(date.year, 1, 1)
+#Group for Employee
+class EmployeeGroupEnum(enum.Enum):
+    operator = "Operator"
+    brigade_chief = "Brigade Chief"
 
 class PSA(Model):
     id = Column(Integer, primary_key = True)
@@ -89,12 +56,13 @@ class DefectPlace(Model):
         return self.description
 
 
-class Operator(Model):
+class Employee(Model):
     id = Column(Integer, primary_key = True)
     description = Column(String(30), nullable = False)
+    group = Column(Enum(EmployeeGroupEnum), nullable = False)
 
     def __repr__(self):
-        return self.description
+        return "({0}, {1})".format(self.group.value, self.description)
 
 
 class ErrorGroup(Model):
@@ -121,21 +89,24 @@ class Rework(Model):
     psa = relationship("PSA")
     part_number_id = Column(Integer, ForeignKey("part_number.id"), nullable = False)
     part_number = relationship("PartNumber")
-    rework_created = Column(DateTime, default = datetime.datetime.utcnow, nullable = False)
-    red_ticket_number = Column(String(30), nullable = False)
-    red_ticket_date = Column(Date)
+    rework_created = Column(DateTime, default = datetime.datetime.utcnow(), nullable = False)
     brigade_num_id = Column(Integer, ForeignKey("brigade_num.id"), nullable = False)
-    brigade_num = relationship("BrigadeNum") 
+    brigade_num = relationship("BrigadeNum")
+    defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
+    defect_position = relationship("DefectPosition") 
     defect_place_id = Column(Integer, ForeignKey("defect_place.id"), nullable = False)
     defect_place = relationship("DefectPlace")
+    error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
+    error = relationship("Error")
+    red_ticket_date = Column(DateTime, nullable = False)
     status = Column(Enum(StatusEnum), nullable = False, default = StatusEnum.red)
-    yellow_ticket_number = Column(String(30))
-    rework_period = Column(Date)
-    kw = Column(String(30))
-    operator_id = Column(Integer, ForeignKey("operator.id"))
-    responsible = relationship("Operator") 
+    employee_id = Column(Integer, ForeignKey("employee.id"))
+    brigade_chief_name = relationship("Employee") 
 
-class ReworkErrorInItem(Model):
+    def __repr__(self):
+        return "({0}, {1})".format(self.id, self.psa, self.status)
+
+class OperatorZone(Model):
     id = Column(Integer, primary_key = True)
     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
     rework = relationship("Rework")
@@ -144,14 +115,23 @@ class ReworkErrorInItem(Model):
     defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
     defect_position = relationship("DefectPosition")
     defect_cell = Column(String(30))
+    operator_rework_done = Column(DateTime, default = datetime.datetime.utcnow(), nullable = False)
 
-class ReworkErrorOutItem(Model):
-    id = Column(Integer, primary_key = True)
-    rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
-    rework = relationship("Rework")
-    error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
-    error = relationship("Error")
-    defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
-    defect_position = relationship("DefectPosition")
-    defect_cell = Column(String(30))
+    def search(self):
+        return Markup(
+        '<div id = "rework-barcode-search-field"><input type = "text" placeholder = "Scan barcode">'
+        + '<button type="submit"><i class="fa fa-search"></i></button>'
+        + '</div>'
+        )
+
+        
+# class ReworkErrorOutItem(Model):
+#     id = Column(Integer, primary_key = True)
+#     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
+#     rework = relationship("Rework")
+#     error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
+#     error = relationship("Error")
+#     defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
+#     defect_position = relationship("DefectPosition")
+#     defect_cell = Column(String(30))
 

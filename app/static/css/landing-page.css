@@ -27,7 +27,6 @@ h6 {
         color: #f6f8fb;
 }
 
-
 .lead {
     font-size: 18px;
     font-weight: 400;
@@ -137,6 +136,7 @@ h6 {
     float: right;
     margin-top: 0;
 }
+
 
 @media(max-width:1199px) {
     ul.banner-social-buttons {
