@@ -1,13 +1,23 @@
 import calendar
+import requests
+import barcode
 
 from flask import flash, render_template, redirect, url_for
 from flask_appbuilder import SimpleFormView
+from flask_appbuilder.baseviews import BaseFormView
 from flask_appbuilder import ModelView, MasterDetailView, MultipleView
 from flask_appbuilder.models.group import aggregate_count
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.models.sqla.filters import FilterEqual
+from flask_appbuilder.fieldwidgets import Select2AJAXWidget, Select2ManyWidget, Select2Widget
+from flask_appbuilder.fields import AJAXSelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from flask_appbuilder.actions import action
-from .forms import OperatorForm
+from .forms import OperatorForm, OperatorAddForm, all_errors
+from .widgets import MyFormWidget, MyShowWidget
+from escpos.printer import Usb
+
+
 
 from . import appbuilder, db
 from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone
@@ -122,13 +132,17 @@ class ErrorModelView(ModelView):
 
 class ReworkModelView(ModelView):
     datamodel = SQLAInterface(Rework)
-
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name" ]
-    #base_filters = [['brigade_chief_name', FilterEqual, EmployeeGroupEnum.brigade_chief]]
+    add_form_query_rel_fields = {'brigade_chief_name': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     base_order = ("id", "asc")
+    list_template = 'list_barcode.html'
+    add_template = 'add_rework.html'
+    show_template = 'my_show.html'
+    add_widget = MyFormWidget
+    show_widget = MyShowWidget
 
     show_fieldsets = [
-        ("Summary", {"fields": ["psa", "part_number", "rework_created", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name" ]}),
+        ("Summary", {"fields": ["id","psa", "part_number", "rework_created", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name", "status" ]}),
     ]
 
     add_fieldsets = [
@@ -147,39 +161,20 @@ class ReworkModelView(ModelView):
             stroka += '0'
             len_id += 1
         stroka += str(item.id)
-        print("Item added: ", stroka)
-
-# class ReworkYellowModelView(ModelView):
-#     datamodel = SQLAInterface(Rework)
-#     list_columns = ["psa", "part_number", "rework_created", "red_ticket_number", "red_ticket_date", "brigade_num", "defect_place"]
-#     base_filters = [['status', FilterEqual, StatusEnum.yellow]]
-#     #base_permissions = ['can_add']
-   
-
-#     show_template = 'appbuilder/general/model/show_cascade.html'
-#     edit_template = 'appbuilder/general/model/edit_cascade.html'
-
-#     base_order = ("id", "asc")
-
-#     show_fieldsets = [
-#         ("Summary", {"fields": ["psa", "part_number", "rework_created", "red_ticket_number", "red_ticket_date", "brigade_num", "defect_place", "yellow_ticket_number", "rework_period", "kw", "responsible" ]}),
-#     ]
-
-#     edit_fieldsets = [
-#         ("Edit Rework", {"fields": ["yellow_ticket_number", "rework_period", "kw", "responsible", "status"]}),
-#     ]
+        p = Usb(0x1d90,0x2060,0,0x81,0x02)
+        p.barcode(stroka,'CODE39',250,3,'','')
+        p.cut()
+        p.barcode(stroka,'CODE39',250,3,'','')
+        p.cut()
 
 class OperatorFormView(SimpleFormView):
     form = OperatorForm
+    form_template = 'operator.html'
     form_title = "Please scan barcode from cable"
     message = "My rework id is: "
     
-
     def form_post(self, form):
         result = form.cable_barcode.data
-        # rework_to_change = SQLAInterface(Rework)
-        # rework_to_change.query(filters = result[8])
-        #rework_to_change = db.session.query(Rework).filter_by(id = int(result[8]))
         rework_to_change = db.session.query(Rework).get(int(result))
         rework_to_change.status = StatusEnum.yellow
         db.session.commit()
@@ -191,14 +186,37 @@ class OperatorZoneModelView(ModelView):
     list_columns = ["rework", "error", "defect_position", "defect_cell"]
     list_template = 'list_barcode.html'
     message = "My operator select field is: "
-
+    add_form = OperatorAddForm
+    add_template = 'add_after_rework.html'
+    #add_form_query_rel_fields = {'rework': [['id', FilterEqual, [1,2,3]]]}
     add_fieldsets = [
         ("Add Cable after rework", {"fields": ["rework", "error", "defect_position", "defect_cell"]}),
     ]
+    
+    # add_form_extra_fields = {
+    #     'error': AJAXSelectField(
+    #                         'Error',
+    #                         description='This will be populated with AJAX',
+    #                         datamodel=datamodel,
+    #                         col_name='error',
+    #                         widget=Select2AJAXWidget(endpoint='/operatorzonemodelview/api/column/add/error')
+    #                      ),
+    # }
 
-    def pre_add(self, item):
-        result = item.rework
-        flash(self.message + " " + "{}".format(result), 'info')
+    # edit_form_extra_fields = {
+    #     'error':  QuerySelectField(
+    #                         'error',
+    #                         query_factory=all_errors,
+    #                         widget=Select2Widget()
+    #                    )
+    # }
+        
+    # def pre_add(self, item):
+    #     result = get_redirect(self)
+    #     flash(self.message + " " + "{}".format(result), 'info')
+
+    # def form_get(self, form):
+    #     flash(self.message + " " + "{}".format("Bitches"), 'info')
 
 db.create_all()
 
@@ -206,7 +224,7 @@ db.create_all()
 def page_not_found(e):
     return (
         render_template(
-            "404.html", base_template=appbuilder.base_template, appbuilder=appbuilder
+            "404.html", base_template = appbuilder.base_template, appbuilder = appbuilder
         ),
         404,
     )

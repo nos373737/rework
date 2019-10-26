@@ -1,0 +1,24 @@
+{% extends "appbuilder/general/model/add.html" %}
+
+    
+    {% block content %}
+    
+    {{ lib.panel_begin(title) }}
+    
+    {% block head_js %}
+    {{ super() }}
+    <script src="{{url_for('static',filename='js/operatorZone.js')}}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script>
+        setTimeout(function() {$('#rework').val(urlId);}, 100); 
+    </script>
+    {% endblock %}
+
+    {% block add_form %}
+        This is my form bitch!
+        {{ super() }}
+    {% endblock %}
+    
+    {{ lib.panel_end() }}
+    
+    {% endblock %}

@@ -2,23 +2,13 @@
 
     
     {% block content %}
+    
     {{ lib.panel_begin(title) }}
-    
     {% block add_form %}
+        This is my form!
         {{ super() }}
+        {{ widgets.get('my_form') }}
     {% endblock %}
-
-    
-    {% block related_views %}
-        {% if related_views is defined %}
-            {% for view in related_views %}
-                {% call lib.accordion_tag(view.__class__.__name__,view.title, False) %}
-                    {{ widgets.get('related_views')[loop.index - 1](pk = pk)|safe }}
-                {% endcall %} 
-            {% endfor %}
-        {% endif %}
-    {% endblock related_views %}
-    
     
     {{ lib.panel_end() }}
     

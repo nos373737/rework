@@ -2,6 +2,22 @@
 {% import 'appbuilder/general/lib.html' as lib %}
 
 {% block content %}
+
+{% block head_css %}
+    {{ super() }}
+    <link href="{{url_for('static',filename='css/landing-page.css')}}" rel="stylesheet">
+    <link href="{{url_for('static',filename='css/print.min.css')}}" rel="stylesheet">
+{% endblock %}
+
+<!-- {% block head_js %}
+    {{ super() }}
+    <script src="{{url_for('static',filename='js/print.min.js')}}"></script>
+    <script src="{{url_for('static',filename='js/barcode.js')}}"></script>
+    <script src="{{url_for('static',filename='js/JsBarcode.all.min.js')}}"></script>
+    <script>
+
+    </script>
+    {% endblock %} -->
 {{ lib.panel_begin(title) }}
 
     {% block list_search scoped %}
@@ -12,7 +28,7 @@
 
     {% block form_form scoped %}
         <div>
-            This is my form
+            This is my list template
         {{ widgets.get('form_inline') }}
         </div>
     {% endblock %}
