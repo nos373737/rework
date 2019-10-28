@@ -96,12 +96,13 @@ class Rework(Model):
     defect_position = relationship("DefectPosition") 
     defect_place_id = Column(Integer, ForeignKey("defect_place.id"), nullable = False)
     defect_place = relationship("DefectPlace")
-    error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
-    error = relationship("Error")
+    # error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
+    # error = relationship("Error")
+    error_str = Column(String(250))
     red_ticket_date = Column(DateTime, nullable = False)
     status = Column(Enum(StatusEnum), nullable = False, default = StatusEnum.red)
     employee_id = Column(Integer, ForeignKey("employee.id"))
-    brigade_chief_name = relationship("Employee") 
+    employee_rework = relationship("Employee") 
 
     def __repr__(self):
         return "({0}, {1})".format(self.id, self.psa, self.status)
@@ -110,28 +111,22 @@ class OperatorZone(Model):
     id = Column(Integer, primary_key = True)
     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
     rework = relationship("Rework")
-    error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
-    error = relationship("Error")
+    # error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
+    # error = relationship("Error")
+    error = Column(String(250))
     defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
     defect_position = relationship("DefectPosition")
     defect_cell = Column(String(30))
-    operator_rework_done = Column(DateTime, default = datetime.datetime.utcnow(), nullable = False)
-
-    def search(self):
-        return Markup(
-        '<div id = "rework-barcode-search-field"><input type = "text" placeholder = "Scan barcode">'
-        + '<button type="submit"><i class="fa fa-search"></i></button>'
-        + '</div>'
-        )
+    employee_id = Column(Integer, ForeignKey("employee.id"))
+    operator = relationship("Employee") 
+    operator_yellow_date = Column(DateTime, default = datetime.datetime.utcnow(), nullable = False)
 
         
-# class ReworkErrorOutItem(Model):
-#     id = Column(Integer, primary_key = True)
-#     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
-#     rework = relationship("Rework")
-#     error_code_id = Column(Integer, ForeignKey("error.id"), nullable = False)
-#     error = relationship("Error")
-#     defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
-#     defect_position = relationship("DefectPosition")
-#     defect_cell = Column(String(30))
+class Out(Model):
+    id = Column(Integer, primary_key = True)
+    cable_barcode = Column(String(128))
+    employee_id = Column(Integer, ForeignKey("employee.id"))
+    brigade_chief = relationship("Employee")
+    done_date = Column(DateTime, default = datetime.datetime.utcnow(), nullable = False)
+    
 

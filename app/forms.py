@@ -5,7 +5,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleF
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms.validators import DataRequired
 from wtforms.fields import DateTimeField
-from .models import Rework, OperatorZone, Error, DefectPosition
+from .models import Rework, OperatorZone, Error, DefectPosition, Employee
 from . import db
 
 
@@ -14,7 +14,15 @@ class OperatorForm(DynamicForm):
     cable_barcode = StringField(
         ("Cable Barcode"), id="cable-barcode", description=("Field for scaning barcode"), widget=BS3TextFieldWidget())
 
-#TODO: change to query reworks only with yellow status
+# def all_employee():
+#     return db.session.query(Employee).all()
+
+# class BrigadeChiefForm(DynamicForm):
+    
+#     cable_barcode = StringField(
+#         ("Cable Barcode"), id="cable-barcode", description=("Field for scaning barcode"), widget=BS3TextFieldWidget())
+#     brigade_chief = QuerySelectField(query_factory=all_employee, allow_blank=False)
+
 def all_reworks():
     return db.session.query(Rework).all()
 
@@ -26,7 +34,7 @@ def all_defects():
 
 class OperatorAddForm(DynamicForm):
     rework = QuerySelectField(query_factory=all_reworks, allow_blank=True)
-    error = QuerySelectField(query_factory=all_errors, allow_blank=True)
+    error_str = QuerySelectMultipleField(query_factory=all_errors, allow_blank=True)
     defect_position = QuerySelectField(query_factory=all_defects, allow_blank=True)
     defect_cell = StringField(
         ("Defects Cell"), description=("Field defects cell"), widget=BS3TextFieldWidget()

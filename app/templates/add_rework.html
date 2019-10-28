@@ -1,11 +1,18 @@
 {% extends "appbuilder/general/model/add.html" %}
 
-    
+   
     {% block content %}
-    
+    <!-- <script>
+        navigator.usb.requestDevice({ filters: [{ vendorId: 0x1d90 }] })
+    .then(device => {
+      alert(device.productName);      // "Citizen CT-S310i"
+      alert(device.manufacturerName); // "Citizen LLC"
+    })
+    .catch(error => { alert(error); });
+    setTimeout(function() {
+    </script> -->
     {{ lib.panel_begin(title) }}
     {% block add_form %}
-        This is my form!
         {{ super() }}
         {{ widgets.get('my_form') }}
     {% endblock %}

@@ -1,8 +1,7 @@
 import calendar
-import requests
 import barcode
 
-from flask import flash, render_template, redirect, url_for
+from flask import flash, render_template, redirect, url_for, request
 from flask_appbuilder import SimpleFormView
 from flask_appbuilder.baseviews import BaseFormView
 from flask_appbuilder import ModelView, MasterDetailView, MultipleView
@@ -20,7 +19,7 @@ from escpos.printer import Usb
 
 
 from . import appbuilder, db
-from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone
+from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone, Out
 
 #views reworks
 class PSAModelView(ModelView):
@@ -132,8 +131,8 @@ class ErrorModelView(ModelView):
 
 class ReworkModelView(ModelView):
     datamodel = SQLAInterface(Rework)
-    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name" ]
-    add_form_query_rel_fields = {'brigade_chief_name': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
+    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
+    add_form_query_rel_fields = {'employee_rework': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     base_order = ("id", "asc")
     list_template = 'list_barcode.html'
     add_template = 'add_rework.html'
@@ -142,16 +141,35 @@ class ReworkModelView(ModelView):
     show_widget = MyShowWidget
 
     show_fieldsets = [
-        ("Summary", {"fields": ["id","psa", "part_number", "rework_created", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name", "status" ]}),
+        ("Summary", {"fields": ["id","psa", "part_number", "rework_created", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework", "status" ]}),
     ]
 
     add_fieldsets = [
-        ("Add New Rework", {"fields": ["psa", "part_number", "brigade_num", "defect_position", "defect_place", "error", "red_ticket_date", "brigade_chief_name" ]}),
+        ("Add New Rework", {"fields": ["psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework" ]}),
     ]
 
     # edit_fieldsets = [
     #     ("Edit Rework", {"fields": ["psa", "part_number", "red_ticket_date", "brigade_num", "defect_place"]}),
     # ]
+    add_form_extra_fields = {
+        'error_str':  QuerySelectMultipleField(
+                            'List Error',
+                            query_factory=all_errors,
+                            widget=Select2ManyWidget()
+                       )
+    }
+
+    @action("muldelete", "Delete", "Delete all Really?", "fa-rocket")
+    def muldelete(self, items):
+        if isinstance(items, list):
+            self.datamodel.delete_all(items)
+            self.update_redirect()
+        else:
+            self.datamodel.delete(items)
+        return redirect(self.get_redirect())
+
+    def pre_add(self, item):
+          item.error_str = ';'.join(str(x) for x in item.error_str)
 
     def post_add(self, item):
         stroka = str()
@@ -171,26 +189,26 @@ class OperatorFormView(SimpleFormView):
     form = OperatorForm
     form_template = 'operator.html'
     form_title = "Please scan barcode from cable"
-    message = "My rework id is: "
+    #message = "My rework id is: "
     
     def form_post(self, form):
         result = form.cable_barcode.data
         rework_to_change = db.session.query(Rework).get(int(result))
         rework_to_change.status = StatusEnum.yellow
         db.session.commit()
-        flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
+        #flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
         return redirect(url_for('OperatorZoneModelView.add', id = int(result)))
 
 class OperatorZoneModelView(ModelView):
     datamodel = SQLAInterface(OperatorZone)
-    list_columns = ["rework", "error", "defect_position", "defect_cell"]
+    list_columns = ["rework", "error", "defect_position", "defect_cell", "operator"]
     list_template = 'list_barcode.html'
     message = "My operator select field is: "
-    add_form = OperatorAddForm
+    #add_form = OperatorAddForm
     add_template = 'add_after_rework.html'
-    #add_form_query_rel_fields = {'rework': [['id', FilterEqual, [1,2,3]]]}
+    add_form_query_rel_fields = {'operator': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     add_fieldsets = [
-        ("Add Cable after rework", {"fields": ["rework", "error", "defect_position", "defect_cell"]}),
+        ("Add Cable after rework", {"fields": ["rework", "error", "defect_position", "defect_cell", "operator"]}),
     ]
     
     # add_form_extra_fields = {
@@ -203,20 +221,42 @@ class OperatorZoneModelView(ModelView):
     #                      ),
     # }
 
-    # edit_form_extra_fields = {
-    #     'error':  QuerySelectField(
-    #                         'error',
-    #                         query_factory=all_errors,
-    #                         widget=Select2Widget()
-    #                    )
-    # }
+    add_form_extra_fields = {
+        'error':  QuerySelectMultipleField(
+                            'List of errors',
+                            query_factory=all_errors,
+                            widget=Select2ManyWidget()
+                       )
+    }
         
-    # def pre_add(self, item):
-    #     result = get_redirect(self)
-    #     flash(self.message + " " + "{}".format(result), 'info')
+    def pre_add(self, item):
+          item.error = ';'.join(str(x) for x in item.error)
 
-    # def form_get(self, form):
-    #     flash(self.message + " " + "{}".format("Bitches"), 'info')
+   
+class BrigadeChiefFormView(ModelView):
+    datamodel = SQLAInterface(Out)
+    list_columns = ["cable_barcode", "brigade_chief", "done_date"]
+    #list_template = 'list_barcode.html'
+    message = "Rework id that go threw process is: "
+    add_form_query_rel_fields = {'brigade_chief': [['group', FilterEqual, EmployeeGroupEnum.brigade_chief]]}
+    add_fieldsets = [
+        ("Add Cable after rework", {"fields": ["cable_barcode", "brigade_chief"]}),
+    ]
+    def post_add(self, item):
+        result = item.cable_barcode
+        rework_to_change = db.session.query(Rework).get(int(result))
+        rework_to_change.status = StatusEnum.done
+        db.session.commit()
+        flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
+        return redirect(url_for('ReworkModelView.list'))
+
+    # def form_post(self, form):
+    #     result = form.cable_barcode.data
+    #     rework_to_change = db.session.query(Rework).get(int(result))
+    #     rework_to_change.status = StatusEnum.done
+    #     db.session.commit()
+    #     flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
+    #     return redirect(url_for('ReworkModelView.list'))
 
 db.create_all()
 
@@ -228,7 +268,6 @@ def page_not_found(e):
         ),
         404,
     )
-
 
 appbuilder.add_view(
     PSAModelView, "List PSA", icon = "fa-envelope", category = "Add/Edit Data" 
@@ -284,22 +323,22 @@ appbuilder.add_view(
 
 appbuilder.add_view(
     OperatorZoneModelView,
-    "Operator Zone with Error",
+    "Operator Zone Model",
     icon="fa-group",
-    label=("Operator Zone with Error"),
-    category="Operator Zone with Error",
-    category_icon="fa-rocket",
+    label=("Operator Zone Model"),
+    category="Operator Zone Model",
+    category_icon="fa-cogs",
 )
 
-# appbuilder.add_view(
-#     ReworkYellowModelView,
-#     "Rework Yellow List",
-#     icon = "fa-envelope",
-#     category = "Rework" 
-# )
+#appbuilder.add_view_no_menu(OperatorZoneModelView)
 
-# appbuilder.add_view_no_menu(ReworkErrorInItemModelView)
-
-# appbuilder.add_view_no_menu(ReworkErrorOutItemModelView)
+appbuilder.add_view(
+    BrigadeChiefFormView,
+    "Brigade Chief Zone",
+    icon="fas fa-check-square",
+    label=("Brigade Chief Zone"),
+    category="Brigade Chief Zone",
+    category_icon="fa-calendar-check",
+)
 
 

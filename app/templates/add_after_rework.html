@@ -10,12 +10,11 @@
     <script src="{{url_for('static',filename='js/operatorZone.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script>
-        setTimeout(function() {$('#rework').val(urlId);}, 100); 
+        setTimeout(function() {$('#rework').val(urlId);}, 10); 
     </script>
     {% endblock %}
 
     {% block add_form %}
-        This is my form bitch!
         {{ super() }}
     {% endblock %}
     
