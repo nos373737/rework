@@ -1,14 +1,16 @@
-Quick How to Example with custom templates
+Project based on flask appbuilder 
 ------------------------------------------
 
-Simple contacts application.
+Simple application for tracking information on inventory.
 
-Insert test data::
+Insert test data that you need.
+Admin credential:
+admin:admin
 
-    $ python testdata.py
+Run it with venv::
 
-Run it::
-
-    $ export FLASK_APP=app/__init__.py
-    $ flask fab create-admin
+    $ export FLASK_APP=app
     $ flask run
+    
+Or start docker:
+docker-compose up --build
