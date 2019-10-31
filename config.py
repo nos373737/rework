@@ -14,8 +14,9 @@ OPENID_PROVIDERS = [
     {"name": "MyOpenID", "url": "https://www.myopenid.com"},
 ]
 
+#SQLALCHEMY_DATABASE_URI = "sqlite:////home/nos373737/flask_builder_demo/Flask-AppBuilder/examples/quicktemplates/app.db"
 SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "app.db")
-# SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost/quickhowto'
+#SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://nos373737:nos37nos37@localhost:3306/rework'
 # SQLALCHEMY_DATABASE_URI = 'postgresql://scott:tiger@localhost:5432/myapp'
 # SQLALCHEMY_ECHO = True
 
