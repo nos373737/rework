@@ -58,9 +58,9 @@ class DefectPlace(Model):
 
 class Employee(Model):
     id = Column(Integer, primary_key = True)
-    description = Column(String(30), nullable = False)
+    description = Column(String(50), nullable = False)
     group = Column(Enum(EmployeeGroupEnum), nullable = False)
-
+    timesheet_number = Column(String(20))
     def __repr__(self):
         return "({0}, {1})".format(self.group.value, self.description)
 
@@ -75,7 +75,7 @@ class ErrorGroup(Model):
 
 class Error(Model):
     id = Column(Integer, primary_key = True)
-    description = Column(String(50), nullable = False)
+    description = Column(String(250), nullable = False)
     symbol_code = Column(String(4), nullable = False)
     error_group_id = Column(Integer, ForeignKey("error_group.id"), nullable=False)
     error_group = relationship("ErrorGroup")

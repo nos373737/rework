@@ -96,7 +96,7 @@ class EmployeeModelView(ModelView):
 
 class ErrorGroupModelView(ModelView):
     datamodel = SQLAInterface(ErrorGroup)
-
+    list_columns = ["description", "symbol_code"]
     @action("muldelete", "Delete", "Delete all Really?", "fa-rocket")
     def muldelete(self, items):
         if isinstance(items, list):
@@ -127,13 +127,26 @@ class ErrorModelView(ModelView):
 #     datamodel = SQLAInterface(ReworkErrorOutItem)
 #     list_columns = ['error', 'defect_position', 'defect_cell']
  
+class ReworkYellowModelView(ModelView):
+    datamodel = SQLAInterface(Rework)
+    base_permissions = ['can_list', 'can_show']
+    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
+    base_order = ("id", "asc")
+    base_filters = [['status', FilterEqual, StatusEnum.yellow]]
 
+class ReworkOutModelView(ModelView):
+    datamodel = SQLAInterface(Rework)
+    base_permissions = ['can_list', 'can_show']
+    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
+    base_order = ("id", "asc")
+    base_filters = [['status', FilterEqual, StatusEnum.done]]
 
 class ReworkModelView(ModelView):
     datamodel = SQLAInterface(Rework)
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
     add_form_query_rel_fields = {'employee_rework': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     base_order = ("id", "asc")
+    base_filters = [['status', FilterEqual, StatusEnum.red]]
     list_template = 'list_barcode.html'
     add_template = 'add_rework.html'
     show_template = 'my_show.html'
@@ -250,14 +263,6 @@ class BrigadeChiefFormView(ModelView):
         flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
         return redirect(url_for('ReworkModelView.list'))
 
-    # def form_post(self, form):
-    #     result = form.cable_barcode.data
-    #     rework_to_change = db.session.query(Rework).get(int(result))
-    #     rework_to_change.status = StatusEnum.done
-    #     db.session.commit()
-    #     flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
-    #     return redirect(url_for('ReworkModelView.list'))
-
 db.create_all()
 
 @appbuilder.app.errorhandler(404)
@@ -311,7 +316,18 @@ appbuilder.add_view(
     icon = "fa-envelope",
     category = "Rework" 
 )
-
+appbuilder.add_view(
+    ReworkYellowModelView,
+    "Cable On Rework List",
+    icon = "fa-envelope",
+    category = "Rework" 
+)
+appbuilder.add_view(
+    ReworkOutModelView,
+    "Cable Done Rework List",
+    icon = "fa-envelope",
+    category = "Rework" 
+)
 appbuilder.add_view(
     OperatorFormView,
     "Operator Zone",
