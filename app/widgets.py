@@ -6,3 +6,6 @@ class MyFormWidget(FormWidget):
 
 class MyShowWidget(ShowWidget):
      template = 'widgets/my_show.html'
+
+class MyReFormWidget(FormWidget):
+     template = 'widgets/my_reform.html'

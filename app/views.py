@@ -13,13 +13,13 @@ from flask_appbuilder.fields import AJAXSelectField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from flask_appbuilder.actions import action
 from .forms import OperatorForm, OperatorAddForm, all_errors
-from .widgets import MyFormWidget, MyShowWidget
+from .widgets import MyFormWidget, MyShowWidget, MyReFormWidget
 from escpos.printer import Usb
 
 
 
 from . import appbuilder, db
-from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone, Out
+from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone, Out, Test
 
 #views reworks
 class PSAModelView(ModelView):
@@ -84,7 +84,7 @@ class DefectPlaceModelView(ModelView):
 
 class EmployeeModelView(ModelView):
     datamodel = SQLAInterface(Employee)
-
+    list_columns = ["description", "timesheet_number"]
     @action("muldelete", "Delete", "Delete all Really?", "fa-rocket")
     def muldelete(self, items):
         if isinstance(items, list):
@@ -118,18 +118,11 @@ class ErrorModelView(ModelView):
         else:
             self.datamodel.delete(items)
         return redirect(self.get_redirect())
-    
-# class ReworkErrorInItemModelView(ModelView):
-#     datamodel = SQLAInterface(ReworkErrorInItem)
-#     list_columns = ['error', 'defect_position', 'defect_cell']
-
-# class ReworkErrorOutItemModelView(ModelView):
-#     datamodel = SQLAInterface(ReworkErrorOutItem)
-#     list_columns = ['error', 'defect_position', 'defect_cell']
  
 class ReworkYellowModelView(ModelView):
     datamodel = SQLAInterface(Rework)
     base_permissions = ['can_list', 'can_show']
+    list_title = 'List of cable that already repair by operators'
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
     base_order = ("id", "asc")
     base_filters = [['status', FilterEqual, StatusEnum.yellow]]
@@ -137,6 +130,7 @@ class ReworkYellowModelView(ModelView):
 class ReworkOutModelView(ModelView):
     datamodel = SQLAInterface(Rework)
     base_permissions = ['can_list', 'can_show']
+    list_title = 'List of cable that dispatch to district master'
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
     base_order = ("id", "asc")
     base_filters = [['status', FilterEqual, StatusEnum.done]]
@@ -147,6 +141,9 @@ class ReworkModelView(ModelView):
     add_form_query_rel_fields = {'employee_rework': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     base_order = ("id", "asc")
     base_filters = [['status', FilterEqual, StatusEnum.red]]
+    list_title = 'List of cable that hit to rework'
+    add_title = 'Add new cable on rework'
+    show_title = 'Cable that added on rework'
     list_template = 'list_barcode.html'
     add_template = 'add_rework.html'
     show_template = 'my_show.html'
@@ -201,7 +198,7 @@ class ReworkModelView(ModelView):
 class OperatorFormView(SimpleFormView):
     form = OperatorForm
     form_template = 'operator.html'
-    form_title = "Please scan barcode from cable"
+    form_title = "Please scan the barcode of cable that you already repair"
     #message = "My rework id is: "
     
     def form_post(self, form):
@@ -214,6 +211,9 @@ class OperatorFormView(SimpleFormView):
 
 class OperatorZoneModelView(ModelView):
     datamodel = SQLAInterface(OperatorZone)
+    list_title = 'List of cable that operator already repair on stand'
+    add_title = 'Add cable after operator repair it on stand'
+    show_title = 'Cable that operator already repair on stand'
     list_columns = ["rework", "error", "defect_position", "defect_cell", "operator"]
     list_template = 'list_barcode.html'
     message = "My operator select field is: "
@@ -248,6 +248,9 @@ class OperatorZoneModelView(ModelView):
    
 class BrigadeChiefFormView(ModelView):
     datamodel = SQLAInterface(Out)
+    list_title = 'List of cable that go trew rework with done status'
+    add_title = 'Add status "Done" to the cable'
+    show_title = 'Cable that go threw rework process to the end'
     list_columns = ["cable_barcode", "brigade_chief", "done_date"]
     #list_template = 'list_barcode.html'
     message = "Rework id that go threw process is: "
@@ -263,6 +266,26 @@ class BrigadeChiefFormView(ModelView):
         flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
         return redirect(url_for('ReworkModelView.list'))
 
+class TestModelView(ModelView):
+    datamodel = SQLAInterface(Test)
+    list_columns = ["id", "cable_barcode", "rework", "employee", "error", "recycling_date"]
+    list_title = 'List of re-rework cable'
+    show_title = 'Cable that was re-rework'
+    add_title = 'Add cable that going on rework again'
+    add_template = 'add_rework.html'
+    add_fieldsets = [("Add Cable on Re-rework", {"fields": ["cable_barcode", "rework", "employee", "error", "recycling_date"]})]
+    add_form_extra_fields = {
+        'error':  QuerySelectMultipleField(
+                            'List of errors',
+                            query_factory=all_errors,
+                            widget=Select2ManyWidget()
+                       )
+    }
+    add_widget = MyReFormWidget
+
+    def pre_add(self, item):
+          item.error = ';'.join(str(x) for x in item.error)
+
 db.create_all()
 
 @appbuilder.app.errorhandler(404)
@@ -273,6 +296,7 @@ def page_not_found(e):
         ),
         404,
     )
+
 
 appbuilder.add_view(
     PSAModelView, "List PSA", icon = "fa-envelope", category = "Add/Edit Data" 
@@ -350,11 +374,14 @@ appbuilder.add_view(
 
 appbuilder.add_view(
     BrigadeChiefFormView,
-    "Brigade Chief Zone",
+    "Issuance to the district master",
     icon="fas fa-check-square",
-    label=("Brigade Chief Zone"),
-    category="Brigade Chief Zone",
+    label=("Issuance to the district master"),
+    category="Delivery/Re-Rework",
     category_icon="fa-calendar-check",
 )
 
+appbuilder.add_view(
+    TestModelView, "Re-Rework", icon = "fas fa-check-square", category = "Delivery/Re-Rework" 
+)
 

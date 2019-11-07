@@ -2,15 +2,10 @@
 
    
     {% block content %}
-    <!-- <script>
-        navigator.usb.requestDevice({ filters: [{ vendorId: 0x1d90 }] })
-    .then(device => {
-      alert(device.productName);      // "Citizen CT-S310i"
-      alert(device.manufacturerName); // "Citizen LLC"
-    })
-    .catch(error => { alert(error); });
-    setTimeout(function() {
-    </script> -->
+    <script>
+        setTimeout(function() {var elem = document.getElementById("cable_barcode");
+        elem.focus();}, 1);
+    </script>
     {{ lib.panel_begin(title) }}
     {% block add_form %}
         {{ super() }}

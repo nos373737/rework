@@ -25,7 +25,6 @@ BABEL_DEFAULT_FOLDER = "translations"
 LANGUAGES = {
     "en": {"flag": "gb", "name": "English"},
     "de": {"flag": "de", "name": "German"},
-    "ru": {"flag": "ru", "name": "Russian"},
     "uk": {"flag": "ua", "name": "Ukrainian"},
 }
 
