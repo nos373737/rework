@@ -148,7 +148,8 @@ class ReworkModelView(ModelView):
     add_template = 'add_rework.html'
     show_template = 'my_show.html'
     add_widget = MyFormWidget
-    show_widget = MyShowWidget
+    show_widget = MyShowWidget 
+    label_columns = {'error_str':'List of errors'}
 
     show_fieldsets = [
         ("Summary", {"fields": ["id","psa", "part_number", "rework_created", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework", "status" ]}),
@@ -356,18 +357,14 @@ appbuilder.add_view(
     OperatorFormView,
     "Operator Zone",
     icon="fa-group",
-    label=("Operator Zone"),
-    category="Operator Zone",
-    category_icon="fa-cogs",
+    label=("Operator Zone")
 )
 
 appbuilder.add_view(
     OperatorZoneModelView,
     "Operator Zone Model",
     icon="fa-group",
-    label=("Operator Zone Model"),
-    category="Operator Zone Model",
-    category_icon="fa-cogs",
+    label=("Operator Zone Model")
 )
 
 #appbuilder.add_view_no_menu(OperatorZoneModelView)

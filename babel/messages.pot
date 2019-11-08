@@ -19,9 +19,9 @@ msgstr ""
 
 #: app/templates/mybase.html:42
 msgid "Logout"
-msgstr ""
+msgstr "Вийти"
 
 #: app/templates/mybase.html:47
 msgid "Login"
-msgstr ""
+msgstr "Увійти"
 

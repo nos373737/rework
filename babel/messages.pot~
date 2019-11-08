@@ -19,13 +19,13 @@ msgstr ""
 #: build/lib.linux-x86_64-2.7/flask_appbuilder/messages.py:9
 #: flask_appbuilder/messages.py:9
 msgid "Security"
-msgstr ""
+msgstr "Безпека"
 
 #: build/lib.linux-x86_64-2.7/flask_appbuilder/messages.py:10
 #: build/lib.linux-x86_64-2.7/flask_appbuilder/security/views.py:126
 #: flask_appbuilder/messages.py:10 flask_appbuilder/security/views.py:126
 msgid "List Users"
-msgstr ""
+msgstr "Список користувачів"
 
 #: build/lib.linux-x86_64-2.7/flask_appbuilder/messages.py:11
 #: flask_appbuilder/messages.py:11
