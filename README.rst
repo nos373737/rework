@@ -11,6 +11,6 @@ Run it with venv::
 
     $ export FLASK_APP=app
     $ flask run
-    
+        
 Or start docker::
     $ docker-compose up --build
