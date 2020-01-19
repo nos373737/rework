@@ -1,7 +1,7 @@
 __pycache__/
 NAMES.DIC
 history.txt
-env
+venv
 .vscode
 rework.xlsx
 testdata.py
