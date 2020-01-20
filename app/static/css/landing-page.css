@@ -63,6 +63,20 @@ h6 {
     text-shadow: 2px 2px 3px rgba(0,0,0,0.6);
 }
 
+#main-search{
+    margin-left: 25%;
+    
+}
+
+.input-group{
+    width: 50%;
+    text-align: center;
+}
+.btn-outline-secondary{
+    margin-top: 10px;
+}
+
+
 @media(max-width:767px) {
     .intro-message {
         padding-bottom: 15%;

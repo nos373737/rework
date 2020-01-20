@@ -1,0 +1,27 @@
+{% extends "mybase.html" %}
+
+{% block head_js %}
+    {{ super() }}
+    <script src="{{url_for('static',filename='js/jquery.min.js')}}"></script>
+    <script>
+        
+        $("#search_btn").click(function() { 
+            alert("Button clicked"); 
+        }); 
+
+    </script>
+    {% endblock %}
+
+{% block content %}
+
+  <div id="main-search" class="container">
+    <h2>{{_("REWORK")}}</h2>
+    
+    <div class="input-group mb-3">
+        <input id="cable-search" type="text" class="form-control" placeholder="Enter barcode to show information about cable">
+        <button id="search_btn" class="btn btn-outline-secondary" type="button">Search</button>
+    </div>
+
+  </div>
+
+{% endblock %}
