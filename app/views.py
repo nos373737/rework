@@ -244,18 +244,18 @@ class OperatorZoneModelView(ModelView):
                             'List Error',
                             query_factory=all_errors,
                             widget=Select2ManyWidget()
-        )
-        #                ),
-        # 'defect_position':  QuerySelectMultipleField(
-        #                     'List Defects',
-        #                     query_factory=all_defects,
-        #                     widget=Select2ManyWidget()
-        #                )
+        
+                       ),
+        'defect_description':  QuerySelectMultipleField(
+                            'List Defects',
+                            query_factory=all_defects,
+                            widget=Select2ManyWidget()
+                       )
     }
         
     def pre_add(self, item):
           item.error = ';'.join(str(x) for x in item.error)
-          #item.defect_position = ';'.join(str(x) for x in item.defect_position)
+          item.defect_description = ';'.join(str(x) for x in item.defect_description)
 
    
 class BrigadeChiefFormView(ModelView):
