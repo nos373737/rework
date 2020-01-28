@@ -12,7 +12,7 @@ from flask_appbuilder.fieldwidgets import Select2AJAXWidget, Select2ManyWidget, 
 from flask_appbuilder.fields import AJAXSelectField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from flask_appbuilder.actions import action
-from .forms import OperatorForm, OperatorAddForm, all_errors
+from .forms import OperatorForm, OperatorAddForm, all_errors, all_defects
 from .widgets import MyFormWidget, MyShowWidget, MyReFormWidget
 from escpos.printer import Usb
 
@@ -125,21 +125,24 @@ class ReworkYellowModelView(ModelView):
     list_title = 'List of cable that already repair by operators'
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
     base_order = ("id", "asc")
+    search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.yellow]]
 
 class ReworkOutModelView(ModelView):
     datamodel = SQLAInterface(Rework)
     base_permissions = ['can_list', 'can_show']
     list_title = 'List of cable that dispatch to district master'
-    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
+    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description"]
     base_order = ("id", "asc")
+    search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.done]]
 
 class ReworkModelView(ModelView):
     datamodel = SQLAInterface(Rework)
-    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
+    list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description"]
     add_form_query_rel_fields = {'employee_rework': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     base_order = ("id", "asc")
+    search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.red]]
     list_title = 'List of cable that hit to rework'
     add_title = 'Add new cable on rework'
@@ -159,13 +162,15 @@ class ReworkModelView(ModelView):
         ("Add New Rework", {"fields": ["psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework" ]}),
     ]
 
-    # edit_fieldsets = [
-    #     ("Edit Rework", {"fields": ["psa", "part_number", "red_ticket_date", "brigade_num", "defect_place"]}),
-    # ]
     add_form_extra_fields = {
         'error_str':  QuerySelectMultipleField(
                             'List Error',
                             query_factory=all_errors,
+                            widget=Select2ManyWidget()
+                       ),
+        'defect_position': QuerySelectMultipleField(
+                            'List Defects',
+                            query_factory=all_defects,
                             widget=Select2ManyWidget()
                        )
     }
@@ -181,6 +186,7 @@ class ReworkModelView(ModelView):
 
     def pre_add(self, item):
           item.error_str = ';'.join(str(x) for x in item.error_str)
+          item.defect_position = ';'.join(str(x) for x in item.defect_position)
 
     def post_add(self, item):
         stroka = str()
@@ -200,15 +206,22 @@ class OperatorFormView(SimpleFormView):
     form = OperatorForm
     form_template = 'operator.html'
     form_title = "Please scan the barcode of cable that you already repair"
-    #message = "My rework id is: "
+    message = "Record for this cable already exist! You can edit it, but not create. You rework id is:"
     
     def form_post(self, form):
         result = form.cable_barcode.data
-        rework_to_change = db.session.query(Rework).get(int(result))
-        rework_to_change.status = StatusEnum.yellow
-        db.session.commit()
-        #flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
-        return redirect(url_for('OperatorZoneModelView.add', id = int(result)))
+        cur_rework_id = int(result)
+        obj = db.session.query(OperatorZone).filter_by(rework_id = cur_rework_id).first()
+        if obj == None:
+            rework_to_change = db.session.query(Rework).get(int(result))
+            rework_to_change.status = StatusEnum.yellow
+            db.session.commit()
+            #flash(self.message + " " + "{}".format(int(result)) + " " + str(rework_to_change), 'info')
+            return redirect(url_for('OperatorZoneModelView.add', id = int(result)))
+        else:
+            flash(self.message + " " + "{}".format(int(result)))
+        
+
 
 class OperatorZoneModelView(ModelView):
     datamodel = SQLAInterface(OperatorZone)
@@ -225,26 +238,24 @@ class OperatorZoneModelView(ModelView):
         ("Add Cable after rework", {"fields": ["rework", "error", "defect_position", "defect_cell", "operator"]}),
     ]
     
-    # add_form_extra_fields = {
-    #     'error': AJAXSelectField(
-    #                         'Error',
-    #                         description='This will be populated with AJAX',
-    #                         datamodel=datamodel,
-    #                         col_name='error',
-    #                         widget=Select2AJAXWidget(endpoint='/operatorzonemodelview/api/column/add/error')
-    #                      ),
-    # }
 
     add_form_extra_fields = {
         'error':  QuerySelectMultipleField(
-                            'List of errors',
+                            'List Error',
                             query_factory=all_errors,
                             widget=Select2ManyWidget()
-                       )
+        )
+        #                ),
+        # 'defect_position':  QuerySelectMultipleField(
+        #                     'List Defects',
+        #                     query_factory=all_defects,
+        #                     widget=Select2ManyWidget()
+        #                )
     }
         
     def pre_add(self, item):
           item.error = ';'.join(str(x) for x in item.error)
+          #item.defect_position = ';'.join(str(x) for x in item.defect_position)
 
    
 class BrigadeChiefFormView(ModelView):
