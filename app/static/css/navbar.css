@@ -1,0 +1,32 @@
+*{transition:all 0.3s ease-in-out;}
+
+.container{
+  clear:both;
+  overflow:auto;
+}
+
+nav{float:right;}
+
+.logo img{
+    margin-top: 5px;
+    float:left;
+    width: 100px;
+}
+
+ul li{
+  display: inline-block;
+  padding:10px;
+  font-size:20px;
+  font-family:raleway;
+}
+
+ul li:hover{
+  color:orange;
+  
+}
+
+@media (min-width: 1200px){
+.container {
+    max-width: 1840px;
+}
+}

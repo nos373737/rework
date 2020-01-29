@@ -1,0 +1,65 @@
+
+<link href="{{url_for('static',filename='css/landing-page.css')}}" rel="stylesheet">
+<link href="{{url_for('static',filename='css/navbar.css')}}" rel="stylesheet">
+<link href="{{url_for('static',filename='css/result_table.css')}}" rel="stylesheet">
+
+<div class="container">
+    <div class="logo">
+      <img src="{{url_for('static', filename='css/images/logo_basic.png')}}" />
+      </div>
+      
+    <nav>
+      <ul>
+      <li><a href="/">BACK TO REWORK</a></li>
+      </ul>
+    </nav>
+</div>
+{% block content %}
+<h3 id="search-text">REWORK INFORMATION:</h3>
+<br>
+<table id="search_table">
+    <tr>
+        <th>Rework with id</th>
+        <th>Created at</th>
+        <th>Responsible</th>
+        <th>Status</th>
+    </tr>
+    <tr>
+        <td>{{ obj.id }}</td>
+        <td>{{ obj.rework_created }}</td>
+        <td>{{ obj.employee_rework }}</td>
+        <td>{{ obj.status.value }}</td>
+    </tr>
+</table>
+<br>
+<h3 id="search-text">OPERATOR REWORK INFO:</h3>
+<table id="search_table">
+    <tr>
+        <th>Rework Info</th>
+        <th>Extra added error</th>
+        <th>Responsible</th>
+        <th>Date</th>
+    </tr>
+    <tr>
+        <td>{{ oper_info.rework}}</td>
+        <td>{{ oper_info.error}}</td>
+        <td>{{ oper_info.operator }}</td>
+        <td>{{ oper_info.operator_yellow_date }}</td>
+    </tr>
+</table>
+<br>
+
+<h3 id="search-text">HARNESS ISSUE INFO:</h3>
+<table id="search_table">
+    <tr>
+        <th>Cable Barcode</th>
+        <th>The person who picks up the harness</th>
+        <th>Date</th>
+    </tr>
+    <tr>
+        <td>{{ issue_info.cable_barcode }}</td>
+        <td>{{ issue_info.brigade_chief }}</td>
+        <td>{{ issue_info.done_date }}</td>
+    </tr>
+</table>
+{% endblock content %}

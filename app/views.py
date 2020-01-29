@@ -21,6 +21,8 @@ from escpos.printer import Usb
 from . import appbuilder, db
 from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone, Out, Test
 
+#homepage search
+
 #views reworks
 class PSAModelView(ModelView):
     datamodel = SQLAInterface(PSA)
@@ -212,6 +214,9 @@ class OperatorFormView(SimpleFormView):
         result = form.cable_barcode.data
         cur_rework_id = int(result)
         obj = db.session.query(OperatorZone).filter_by(rework_id = cur_rework_id).first()
+        check_rework = db.session.query(Rework).filter_by(id = cur_rework_id).first()
+        if check_rework == None:
+            return flash("Rework for harness doesn`t exist with enter barcode" + " " + "{}".format(result) + ". " + "Please register harness on rework first!")
         if obj == None:
             rework_to_change = db.session.query(Rework).get(int(result))
             rework_to_change.status = StatusEnum.yellow
@@ -228,14 +233,14 @@ class OperatorZoneModelView(ModelView):
     list_title = 'List of cable that operator already repair on stand'
     add_title = 'Add cable after operator repair it on stand'
     show_title = 'Cable that operator already repair on stand'
-    list_columns = ["rework", "error", "defect_position", "defect_cell", "operator"]
+    list_columns = ["rework", "error", "defect_description", "defect_cell", "operator"]
     list_template = 'list_barcode.html'
     message = "My operator select field is: "
     #add_form = OperatorAddForm
     add_template = 'add_after_rework.html'
     add_form_query_rel_fields = {'operator': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
     add_fieldsets = [
-        ("Add Cable after rework", {"fields": ["rework", "error", "defect_position", "defect_cell", "operator"]}),
+        ("Add Cable after rework", {"fields": ["rework", "error", "defect_description", "defect_cell", "operator"]}),
     ]
     
 
@@ -298,6 +303,23 @@ class TestModelView(ModelView):
     def pre_add(self, item):
           item.error = ';'.join(str(x) for x in item.error)
 
+class SearchCable(SimpleFormView):
+    form = OperatorForm
+    form_template = 'operator.html'
+    form_title = "Please scan the barcode of harness that you need to find"
+    message = "Rework don`t exist with enter barcode: "
+
+    def form_post(self, form):
+        result = form.cable_barcode.data
+        cur_rework_id = int(result)
+        obj = db.session.query(Rework).filter_by(id = cur_rework_id).first()
+        if obj != None:
+            oper_info = db.session.query(OperatorZone).filter_by(rework_id=cur_rework_id).first()
+            issue_info = db.session.query(Out).filter_by(cable_barcode=result).first()
+            return render_template('searchshow.html', obj=obj, oper_info=oper_info, issue_info=issue_info)
+        else:
+            flash(self.message + " " + "{}".format(result) + ". " + "Please add harness on rework first!")
+
 db.create_all()
 
 @appbuilder.app.errorhandler(404)
@@ -311,31 +333,31 @@ def page_not_found(e):
 
 
 appbuilder.add_view(
-    PSAModelView, "List PSA", icon = "fa-envelope", category = "Add/Edit Data" 
+    PSAModelView, "List PSA", icon = "fa-wrench", category = "Add/Edit Data" 
 )
 
 appbuilder.add_view(
-    EmployeeModelView, "List Responsible Person", icon = "fa-envelope", category = "Add/Edit Data" 
+    EmployeeModelView, "List Responsible Person", icon = "fa-group", category = "Add/Edit Data" 
 )
 
 appbuilder.add_view(
     DefectPositionModelView,
     "List Defect Position",
-    icon = "fa-envelope",
+    icon = "fa-wrench",
     category = "Add/Edit Data", 
 )
 
 appbuilder.add_view(
-    DefectPlaceModelView, "List Defect Place", icon = "fa-envelope", category = "Add/Edit Data" 
+    DefectPlaceModelView, "List Defect Place", icon = "fa-wrench", category = "Add/Edit Data" 
 )
 
 appbuilder.add_view(
-    PartNumberModelView, "List PartNumber", icon = "fa-envelope", category = "Add/Edit Data" 
+    PartNumberModelView, "List PartNumber", icon = "fa-wrench", category = "Add/Edit Data" 
 )
 appbuilder.add_view(
     BrigadeNumModelView, 
     "List BrigadeNum",
-    icon = "fa-envelope",
+    icon = "fa-group",
     category = "Add/Edit Data" 
 )
 appbuilder.add_view(
@@ -349,19 +371,19 @@ appbuilder.add_view(
 appbuilder.add_view(
     ReworkModelView,
     "Rework List",
-    icon = "fa-envelope",
+    icon = "fa-wrench",
     category = "Rework" 
 )
 appbuilder.add_view(
     ReworkYellowModelView,
     "Cable On Rework List",
-    icon = "fa-envelope",
+    icon = "fa-wrench",
     category = "Rework" 
 )
 appbuilder.add_view(
     ReworkOutModelView,
     "Cable Done Rework List",
-    icon = "fa-envelope",
+    icon = "fa-wrench",
     category = "Rework" 
 )
 appbuilder.add_view(
@@ -391,5 +413,9 @@ appbuilder.add_view(
 
 appbuilder.add_view(
     TestModelView, "Re-Rework", icon = "fas fa-check-square", category = "Delivery/Re-Rework" 
+)
+
+appbuilder.add_view(
+    SearchCable, "Search CABLE in Rework", icon = "fa-search", label="SEARCH CABLE" 
 )
 

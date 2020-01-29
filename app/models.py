@@ -113,13 +113,17 @@ class OperatorZone(Model):
     rework_id = Column(Integer, ForeignKey("rework.id"), nullable = False)
     rework = relationship("Rework")
     error = Column(String(500))
-    defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
-    defect_position = relationship("DefectPosition")
+    # defect_position_id = Column(Integer, ForeignKey("defect_position.id"), nullable = False)
+    # defect_position = relationship("DefectPosition")
     defect_description = Column(String(250)) 
     defect_cell = Column(String(30))
     employee_id = Column(Integer, ForeignKey("employee.id"))
     operator = relationship("Employee") 
     operator_yellow_date = Column(DateTime, default = datetime.datetime.now(), nullable = False)
+
+    def __repr__(self):
+        return "({0}, {1}, {2}, {3}, {4}, {5})".format(self.rework,
+         self.error, self.defect_description, self.defect_cell, self.operator, self.operator_yellow_date)
 
         
 class Out(Model):
@@ -128,6 +132,11 @@ class Out(Model):
     employee_id = Column(Integer, ForeignKey("employee.id"), nullable = False)
     brigade_chief = relationship("Employee")
     done_date = Column(DateTime, default = datetime.datetime.now(), nullable = False)
+
+    def __repr__(self):
+        return "({0}, {1}, {2}, {3}, {4}, {5})".format(self.cable_barcode,
+         self.brigade_chief, self.done_date)
+
 
 class Test(Model):
     id = Column(Integer, primary_key = True)
