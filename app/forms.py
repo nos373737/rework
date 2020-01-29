@@ -1,10 +1,10 @@
 from flask_appbuilder.fieldwidgets import BS3TextFieldWidget
 from flask_appbuilder.forms import DynamicForm
-from wtforms import StringField
+from wtforms import StringField 
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from wtforms.ext.sqlalchemy.orm import model_form
 from wtforms.validators import DataRequired
-from wtforms.fields import DateTimeField
+from wtforms.fields import DateTimeField, DateField
 from .models import Rework, OperatorZone, Error, DefectPosition, Employee
 from . import db
 
@@ -13,6 +13,12 @@ class OperatorForm(DynamicForm):
     
     cable_barcode = StringField(
         ("Cable Barcode"), id="cable-barcode", description=("Field for scaning barcode"), widget=BS3TextFieldWidget())
+
+class ReportForm(DynamicForm):
+    start = DateTimeField(format='%Y-%m-%d', description = "Format of date is: YYYY-MM-DD")
+    end = DateTimeField(format='%Y-%m-%d', description = "Format of date is: YYYY-MM-DD")
+
+  
 
 # def all_employee():
 #     return db.session.query(Employee).all()

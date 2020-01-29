@@ -1,5 +1,6 @@
 import calendar
 import barcode
+import sqlite3
 
 from flask import flash, render_template, redirect, url_for, request
 from flask_appbuilder import SimpleFormView
@@ -12,16 +13,12 @@ from flask_appbuilder.fieldwidgets import Select2AJAXWidget, Select2ManyWidget, 
 from flask_appbuilder.fields import AJAXSelectField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField, QuerySelectMultipleField
 from flask_appbuilder.actions import action
-from .forms import OperatorForm, OperatorAddForm, all_errors, all_defects
+from .forms import OperatorForm, OperatorAddForm, ReportForm, all_errors, all_defects
 from .widgets import MyFormWidget, MyShowWidget, MyReFormWidget
 from escpos.printer import Usb
-
-
-
 from . import appbuilder, db
 from .models import PSA, Error, ErrorGroup, Rework, PartNumber, DefectPlace, DefectPosition, BrigadeNum, StatusEnum, Employee, EmployeeGroupEnum, OperatorZone, Out, Test
 
-#homepage search
 
 #views reworks
 class PSAModelView(ModelView):
@@ -126,7 +123,7 @@ class ReworkYellowModelView(ModelView):
     base_permissions = ['can_list', 'can_show']
     list_title = 'List of cable that already repair by operators'
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description" ]
-    base_order = ("id", "asc")
+    base_order = ("id", "desc")
     search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.yellow]]
 
@@ -135,7 +132,7 @@ class ReworkOutModelView(ModelView):
     base_permissions = ['can_list', 'can_show']
     list_title = 'List of cable that dispatch to district master'
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description"]
-    base_order = ("id", "asc")
+    base_order = ("id", "desc")
     search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.done]]
 
@@ -143,7 +140,7 @@ class ReworkModelView(ModelView):
     datamodel = SQLAInterface(Rework)
     list_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date", "employee_rework.description"]
     add_form_query_rel_fields = {'employee_rework': [['group', FilterEqual, EmployeeGroupEnum.operator]]}
-    base_order = ("id", "asc")
+    base_order = ("id", "desc")
     search_columns = ["id", "psa", "part_number", "brigade_num", "defect_position", "defect_place", "error_str", "red_ticket_date"]
     base_filters = [['status', FilterEqual, StatusEnum.red]]
     list_title = 'List of cable that hit to rework'
@@ -320,6 +317,18 @@ class SearchCable(SimpleFormView):
         else:
             flash(self.message + " " + "{}".format(result) + ". " + "Please add harness on rework first!")
 
+class Reports(SimpleFormView):
+    form = ReportForm
+    form_template = 'operator.html'
+    form_title = "REPORT"
+    
+    def form_post(self, form):
+        start = result = form.start.data
+        end = result = form.end.data
+        qry = db.session.query(Rework).filter(Rework.rework_created.between(start, end))    
+        return render_template('reports.html', qry=qry)
+
+
 db.create_all()
 
 @appbuilder.app.errorhandler(404)
@@ -330,7 +339,6 @@ def page_not_found(e):
         ),
         404,
     )
-
 
 appbuilder.add_view(
     PSAModelView, "List PSA", icon = "fa-wrench", category = "Add/Edit Data" 
@@ -386,6 +394,11 @@ appbuilder.add_view(
     icon = "fa-wrench",
     category = "Rework" 
 )
+
+appbuilder.add_view(
+    Reports, "REPORTS", icon = "fa-envelope", category = "Rework" 
+)
+
 appbuilder.add_view(
     OperatorFormView,
     "Operator Zone",
