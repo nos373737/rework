@@ -17,7 +17,7 @@ flask-login==0.4.1
 flask-openid==1.2.5
 flask-sqlalchemy==2.4.0
 flask-wtf==0.14.2
-flask==1.1.1
+flask==2.3.2
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.3            # via flask, flask-babel
 jsonschema==3.0.1
