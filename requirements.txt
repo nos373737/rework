@@ -35,7 +35,7 @@ pyyaml==5.4               # via apispec
 six==1.12.0               # via flask-jwt-extended, jsonschema, prison, pyrsistent, python-dateutil, sqlalchemy-utils
 sqlalchemy-utils==0.33.9
 sqlalchemy==1.3.1         # via flask-sqlalchemy, marshmallow-sqlalchemy, sqlalchemy-utils
-werkzeug==2.2.3          # via flask, flask-jwt-extended
+werkzeug==3.0.3          # via flask, flask-jwt-extended
 wtforms==2.2.1            # via flask-wtf
 python-escpos	          # via print barcode
 python-barcode	          # via generating barcode 
